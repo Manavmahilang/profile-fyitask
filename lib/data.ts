@@ -10,11 +10,11 @@ export const links = [
     },
     {
         name: "Cart",
-        hash: "#cart",
+        hash: "/Cart",
     },
     {
-        name: "Account",
-        hash: "#account",
+        name: "Sign In",
+        hash: "#signin",
     },
     {
         name: "Products",
