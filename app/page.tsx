@@ -1,10 +1,9 @@
-import Image from "next/image";
-import Navbar from "./components/Navbar";
+import ProductsPage from "./Products/procductscomponents/productpage";
 
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <ProductsPage />
     </>
   );
 }

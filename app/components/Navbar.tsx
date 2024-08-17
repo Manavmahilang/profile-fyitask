@@ -1,15 +1,48 @@
 'use client'
-import React from 'react';
-import { motion } from "framer-motion";
-import { links } from "@/lib/data";
+import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { FaShoppingCart } from 'react-icons/fa';
-import { useCart } from './Cartcontext';
+import { FaShoppingCart, FaHome, FaUserCircle } from 'react-icons/fa';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { IoIosLogIn } from 'react-icons/io';
+import { BiLogOut } from 'react-icons/bi';
+
+interface Link {
+    name: string;
+    hash: string;
+}
+
+const links: Link[] = [
+    { name: "Home", hash: "/" },
+    { name: "Cart", hash: "/Cart" },
+    { name: "Sign In", hash: "signin" }
+];
 
 export default function Header() {
-    const { cartItemCount } = useCart();
+    const [cartItemCount, setCartItemCount] = useState<number>(0);
+    const [showDropdown, setShowDropdown] = useState<boolean>(false);
     const { data: session } = useSession();
+
+    useEffect(() => {
+        const updateCartItemCount = () => {
+            const cartStorage = JSON.parse(localStorage.getItem('cart') || '[]');
+            const totalItems = cartStorage.reduce((sum: number, item: any) => sum + item.quantity, 0);
+            setCartItemCount(totalItems);
+        };
+
+        // Update count on mount
+        updateCartItemCount();
+
+        // Regularly check for updates in localStorage
+        const intervalId = setInterval(updateCartItemCount, 1000);
+
+        // Cleanup the interval on unmount
+        return () => clearInterval(intervalId);
+    }, []);
+
+    const handleDropdownToggle = () => {
+        setShowDropdown(!showDropdown);
+    };
 
     return (
         <header className='z-[999] relative'>
@@ -27,7 +60,7 @@ export default function Header() {
                     text-gray-500 sm:w-[initial] sm:flex-nowrap sm:gap-5'>
                     {
                         links.map(link => (
-                            <motion.li className="h-3/4 flex items-center justify-center" key={link.hash}
+                            <motion.li className="h-3/4 flex items-center justify-center relative" key={link.hash}
                                 initial={{ y: -100, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}>
                                 <Link className="flex w-full items-center justify-center px-3 py-3 hover:text-gray-950 transition" href={link.hash}>
@@ -53,13 +86,31 @@ export default function Header() {
                                                     )
                                                 }
                                             </div>
+                                        ) : link.name === "Home" ? (
+                                            <FaHome size={20} />
                                         ) : link.name === "Sign In" ? (
                                             session ? (
-                                                <button onClick={() => signOut()} className="flex items-center">
-                                                    Sign Out
-                                                </button>
+                                                <div className="relative">
+                                                    <FaUserCircle size={20} onClick={handleDropdownToggle} />
+                                                    {showDropdown && (
+                                                        <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border border-gray-200">
+                                                            <button
+                                                                className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
+                                                                onClick={() => signOut()}
+                                                            >
+                                                                <BiLogOut size={20} className="mr-2" />
+                                                                Sign Out
+                                                            </button>
+                                                            <Link href="/Account/Orders" className=" w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center">
+                                                                <FaUserCircle size={20} className="mr-2" />
+                                                                Orders
+                                                            </Link>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             ) : (
                                                 <button onClick={() => signIn('google')} className="flex items-center">
+                                                    <IoIosLogIn size={20} className="mr-2" />
                                                     Sign In
                                                 </button>
                                             )
@@ -74,5 +125,5 @@ export default function Header() {
                 </ul>
             </nav>
         </header>
-    )
+    );
 }
