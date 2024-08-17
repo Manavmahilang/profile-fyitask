@@ -5,6 +5,8 @@ import { CartProvider } from "./components/Cartcontext";
 import { Toaster } from "react-hot-toast";
 import { SessionProvider } from 'next-auth/react'
 import { auth } from '@/auth'
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,11 +24,15 @@ export default async function RootLayout({
 
   return (
     <SessionProvider session={session}>
-
       <html lang="en">
-        <CartProvider >
-          <body className={inter.className}>{children}</body>
-        </CartProvider>
+        <body className={inter.className}>
+          <CartProvider>
+
+            {children}
+            <Toaster position="bottom-left" />
+            <Footer />
+          </CartProvider>
+        </body>
       </html>
     </SessionProvider>
   );
