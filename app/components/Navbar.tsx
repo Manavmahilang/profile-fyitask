@@ -15,7 +15,7 @@ interface Link {
 const links: Link[] = [
     { name: "Home", hash: "/" },
     { name: "Cart", hash: "/Cart" },
-    { name: "Sign In", hash: "signin" }
+    { name: "Sign In", hash: "" }
 ];
 
 export default function Header() {
@@ -25,8 +25,8 @@ export default function Header() {
 
     useEffect(() => {
         const updateCartItemCount = () => {
-            const cartStorage = JSON.parse(localStorage.getItem('cart') || '[]');
-            const totalItems = cartStorage.reduce((sum: number, item: any) => sum + item.quantity, 0);
+            const cartStorage: { quantity: number }[] = JSON.parse(localStorage.getItem('cart') || '[]');
+            const totalItems = cartStorage.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
             setCartItemCount(totalItems);
         };
 
@@ -34,7 +34,7 @@ export default function Header() {
         updateCartItemCount();
 
         // Regularly check for updates in localStorage
-        const intervalId = setInterval(updateCartItemCount, 1000);
+        const intervalId = setInterval(updateCartItemCount, 500);
 
         // Cleanup the interval on unmount
         return () => clearInterval(intervalId);
@@ -47,7 +47,7 @@ export default function Header() {
     return (
         <header className='z-[999] relative'>
             <motion.div className='fixed top-0 left-1/2 -translate-x h-[4.5rem] w-full rounded-none
-                border-white border-opacity-40 bg-white bg-opacity-80
+                border-white border-opacity-40 bg-white bg-opacity-10
                 shadow-black/[0.03] backdrop-blur-[0.5rem]
                 sm:top-6 sm:h-[3.25rem] sm:w-[36rem] sm:rounded-full'
                 initial={{ y: -100, x: "-50%", opacity: 0 }}
@@ -63,7 +63,7 @@ export default function Header() {
                             <motion.li className="h-3/4 flex items-center justify-center relative" key={link.hash}
                                 initial={{ y: -100, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}>
-                                <Link className="flex w-full items-center justify-center px-3 py-3 hover:text-gray-950 transition" href={link.hash}>
+                                <Link className="flex w-full items-center justify-center px-3 py-3 " href={link.hash}>
                                     {
                                         link.name === "Cart" ? (
                                             <div className="relative flex items-center">
@@ -72,7 +72,7 @@ export default function Header() {
                                                     animate={{ scale: [1, 1.2, 1] }}
                                                     transition={{ duration: 0.3 }}
                                                 >
-                                                    <FaShoppingCart size={20} />
+                                                    <FaShoppingCart size={20} className='hover:text-gold transition' />
                                                 </motion.div>
                                                 {
                                                     cartItemCount > 0 && (
@@ -87,13 +87,13 @@ export default function Header() {
                                                 }
                                             </div>
                                         ) : link.name === "Home" ? (
-                                            <FaHome size={20} />
+                                            <FaHome size={20} className='hover:text-gold transition' />
                                         ) : link.name === "Sign In" ? (
                                             session ? (
                                                 <div className="relative">
                                                     <FaUserCircle size={20} onClick={handleDropdownToggle} />
                                                     {showDropdown && (
-                                                        <div className="absolute top-full right-0 mt-2 w-48 bg-white shadow-lg rounded-lg border border-gray-200">
+                                                        <div className="absolute top-full left-0 mt-2 w-48 bg-white shadow-lg rounded-lg border border-gray-200">
                                                             <button
                                                                 className="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center"
                                                                 onClick={() => signOut()}
@@ -109,7 +109,7 @@ export default function Header() {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <button onClick={() => signIn('google')} className="flex items-center">
+                                                <button onClick={() => signIn('google')} className="flex items-center hover:text-gold transition">
                                                     <IoIosLogIn size={20} className="mr-2" />
                                                     Sign In
                                                 </button>

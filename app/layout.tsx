@@ -30,7 +30,7 @@ export default async function RootLayout({
 
             {children}
             <Toaster position="bottom-left" />
-            <Footer />
+            
           </CartProvider>
         </body>
       </html>

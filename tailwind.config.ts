@@ -13,6 +13,12 @@ const config: Config = {
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
+      colors: {
+        'gold': '#FFA500', // Define the color with a custom name
+      },
+      boxShadow: {
+        'neon-yellow': '0 0 20px rgba(255, 223, 0, 0.7)',
+      },
     },
   },
   plugins: [],
