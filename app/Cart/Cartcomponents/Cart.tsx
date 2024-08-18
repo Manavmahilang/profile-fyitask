@@ -61,7 +61,6 @@ const CartPage = () => {
         calculateFinalPrice(cartItems, discountValue);
     };
 
-
     const updateItemQuantity = (id: number, quantity: number) => {
         const updatedCart = cartItems.map(item =>
             item.id === id ? { ...item, quantity: Math.max(quantity, 1) } : item
@@ -140,19 +139,18 @@ const CartPage = () => {
         }
     };
 
-
     const backgroundImage = 'url(/emptycart.jpg)';
 
     return (
         <div
-            className="min-h-screen px-10 pt-40 bg-gray-900 text-gray-100"
+            className="min-h-screen px-4 py-10 bg-gray-900 text-gray-100"
             style={{
                 backgroundImage: backgroundImage,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
         >
-            <h1 className="text-4xl font-semibold mb-6 text-white">Your Cart</h1>
+            <h1 className="text-3xl md:text-4xl font-semibold mb-6 text-white pt-10">Your Cart</h1>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
                 <div className="lg:col-span-3">
                     <AnimatePresence>
@@ -170,15 +168,17 @@ const CartPage = () => {
                         )}
                     </AnimatePresence>
                 </div>
-                <DiscountSection
-                    discountCode={discountCode}
-                    setDiscountCode={setDiscountCode}
-                    applyDiscountCode={applyDiscountCode}
-                    finalPrice={finalPrice}
-                    initialPrice={initialPrice}
-                    discountAmount={discountAmount}
-                    handleCheckout={handleCheckout}
-                />
+                <div className="lg:col-span-1">
+                    <DiscountSection
+                        discountCode={discountCode}
+                        setDiscountCode={setDiscountCode}
+                        applyDiscountCode={applyDiscountCode}
+                        finalPrice={finalPrice}
+                        initialPrice={initialPrice}
+                        discountAmount={discountAmount}
+                        handleCheckout={handleCheckout}
+                    />
+                </div>
             </div>
         </div>
     );

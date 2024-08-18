@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import {  UserRole } from "@prisma/client";
+import { User as PrismaUser, UserRole } from "@prisma/client";
 import { db } from "./lib/db";
 
 

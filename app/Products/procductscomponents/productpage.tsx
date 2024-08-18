@@ -50,7 +50,7 @@ const ProductsPage: React.FC = () => {
     return (
         <>
             <Navbar />
-            <div className="relative min-h-screen bg-gray-50 p-20 overflow-hidden">
+            <div className="relative min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 overflow-hidden">
                 <video
                     autoPlay
                     loop
@@ -76,7 +76,7 @@ const ProductsPage: React.FC = () => {
                             },
                         },
                     }}
-                    className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-20 px-20"
+                    className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3  gap-6 pt-32"
                 >
                     {products.map((product) => (
                         <motion.div
@@ -85,16 +85,16 @@ const ProductsPage: React.FC = () => {
                                 hidden: { opacity: 0, y: -50 },
                                 visible: { opacity: 1, y: 0 },
                             }}
-                            className="bg-white p-6 rounded-lg  hover:shadow-xl shadow-neon-yellow transition-shadow duration-300"
+                            className="bg-white p-4 sm:p-6 rounded-lg hover:shadow-xl shadow-neon-yellow transition-shadow duration-300"
                         >
                             <Image
                                 src={product.image}
                                 alt={product.name}
                                 width={500}
                                 height={300}
-                                className="w-full h-80 object-cover mb-4 rounded"
+                                className="w-full h-48 sm:h-60 object-cover mb-4 rounded"
                             />
-                            <h2 className="text-lg font-semibold mb-2 text-gray-800">{product.name}</h2>
+                            <h2 className="text-base sm:text-lg font-semibold mb-2 text-gray-800">{product.name}</h2>
                             <p className="text-gray-600 mb-4">{`$${product.price.toFixed(2)}`}</p>
                             <button
                                 className="w-full bg-gold text-white py-2 rounded hover:shadow-neon-yellow transition-colors duration-300"
