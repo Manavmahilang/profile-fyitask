@@ -1,10 +1,11 @@
 'use client';
-import React, { useState, useEffect } from 'react';
-import { FaTrashAlt } from 'react-icons/fa';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
-import { sendOrderConfirmationEmail } from '@/lib/mail';
+import { AnimatePresence } from 'framer-motion';
+import CartItemComponent from './CartItemComponent';
+import DiscountSection from './DsicountSection';
 
 
 interface CartItem {
@@ -15,37 +16,51 @@ interface CartItem {
     quantity: number;
 }
 
-const Cart = () => {
+const CartPage = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [discountCode, setDiscountCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [finalPrice, setFinalPrice] = useState(0);
     const { data: session } = useSession();
     const router = useRouter();
+    const [initialPrice, setInitialPrice] = useState(0);
+    const [discountAmount, setDiscountAmount] = useState(0);
 
     useEffect(() => {
         const cartStorage = JSON.parse(localStorage.getItem('cart') || '[]');
         setCartItems(cartStorage);
-        calculateFinalPrice(cartStorage);
-    }, []);
+        calculateFinalPrice(cartStorage, discount);
+    }, [discount]);
 
-    const calculateTotalPrice = () => {
+    const calculateTotalPrice = useMemo(() => {
         return cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-    };
+    }, [cartItems]);
 
-    const calculateFinalPrice = (cartItems: CartItem[]) => {
-        const totalPrice = calculateTotalPrice();
-        setFinalPrice(totalPrice - discount);
+    const calculateFinalPrice = (cartItems: CartItem[], discount: number) => {
+        const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+        const discountAmount = discount; // The discount applied
+        const newFinalPrice = totalPrice - discountAmount;
+        setFinalPrice(newFinalPrice);
+        setInitialPrice(totalPrice); // Store initial price for display
+        setDiscountAmount(discountAmount); // Store discount amount for display
     };
 
     const applyDiscountCode = (code: string) => {
+        let discountValue = 0;
+
         if (code === 'DISCOUNT10') {
-            setDiscount(10);
+            discountValue = 10;
+            toast.success('🎉 Discount code applied successfully! 🎉');
         } else {
-            setDiscount(0);
+            toast.error('❌ Invalid discount code. Please use DISCOUNT10 ❌');
+            return;
         }
-        calculateFinalPrice(cartItems);
+
+        setDiscount(discountValue);
+        // Call calculateFinalPrice after updating the discount state
+        calculateFinalPrice(cartItems, discountValue);
     };
+
 
     const updateItemQuantity = (id: number, quantity: number) => {
         const updatedCart = cartItems.map(item =>
@@ -53,29 +68,71 @@ const Cart = () => {
         );
         setCartItems(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
-        calculateFinalPrice(updatedCart);
+        calculateFinalPrice(updatedCart, discount);
     };
 
     const removeItemFromCart = (id: number) => {
         const updatedCart = cartItems.filter(item => item.id !== id);
         setCartItems(updatedCart);
         localStorage.setItem('cart', JSON.stringify(updatedCart));
-        calculateFinalPrice(updatedCart);
+        calculateFinalPrice(updatedCart, discount);
     };
 
     const handleCheckout = async () => {
         if (session) {
             try {
-                // Send confirmation email
-                await sendOrderConfirmationEmail('manavmahilang78@gmail.com');
+                // Send order confirmation email
+                const response = await fetch('/api/sendOrderConfirmation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: session.user?.email }),
+                });
 
-                // Show toast notification
-                toast.success('Order received, Confirmation email sent');
+                if (response.ok) {
+                    // Store the order in the database
+                    const orderPayload = {
+                        userId: session.user?.id,
+                        products: cartItems.map(item => ({
+                            id: item.id,
+                            quantity: item.quantity,
+                            price: item.price,
+                        })),
+                        finalPrice: finalPrice, // Ensure finalPrice is used here
+                        address: 'User address here', // Replace with actual address input if needed
+                    };
 
-                // Proceed to checkout
-                router.push('/checkout');
+                    console.log('Order Payload:', orderPayload); // Log payload for debugging
+
+                    const orderResponse = await fetch('/api/orders', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderPayload),
+                    });
+
+                    if (orderResponse.ok) {
+                        // Empty the cart
+                        setCartItems([]);
+                        localStorage.removeItem('cart');
+
+                        // Display confirmation message
+                        toast.success('Order received, confirmation email sent');
+
+                        // Redirect after 5 seconds
+                        setTimeout(() => {
+                            router.push('/');
+                        }, 5000);
+                    } else {
+                        toast.error('Failed to store order details');
+                    }
+                } else {
+                    toast.error('Failed to send confirmation email');
+                }
             } catch (error) {
-                toast.error('Failed to send confirmation email');
+                toast.error('Failed to process order');
                 console.error(error);
             }
         } else {
@@ -83,74 +140,48 @@ const Cart = () => {
         }
     };
 
+
+    const backgroundImage = 'url(/emptycart.jpg)';
+
     return (
-        <div className="min-h-screen px-10 pt-40 bg-gray-100">
-            <h1 className="text-2xl font-semibold mb-6">Your Cart</h1>
+        <div
+            className="min-h-screen px-10 pt-40 bg-gray-900 text-gray-100"
+            style={{
+                backgroundImage: backgroundImage,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            <h1 className="text-4xl font-semibold mb-6 text-white">Your Cart</h1>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
                 <div className="lg:col-span-3">
-                    {cartItems.length > 0 ? (
-                        cartItems.map((item) => (
-                            <div key={item.id} className="flex items-center bg-white p-4 rounded-lg shadow-md mb-4">
-                                <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded" />
-                                <div className="ml-4 flex-grow">
-                                    <h2 className="text-lg font-semibold">{item.name}</h2>
-                                    <p className="text-gray-700">${item.price}</p>
-                                    <div className="flex items-center mt-2">
-                                        <button onClick={() => updateItemQuantity(item.id, item.quantity - 1)}>-</button>
-                                        <span className="mx-2">{item.quantity}</span>
-                                        <button onClick={() => updateItemQuantity(item.id, item.quantity + 1)}>+</button>
-                                    </div>
-                                </div>
-                                <button
-                                    className="ml-auto text-red-500 hover:text-red-700"
-                                    onClick={() => removeItemFromCart(item.id)}
-                                >
-                                    <FaTrashAlt />
-                                </button>
-                            </div>
-                        ))
-                    ) : (
-                        <p>Your cart is empty</p>
-                    )}
+                    <AnimatePresence>
+                        {cartItems.length > 0 ? (
+                            cartItems.map(item => (
+                                <CartItemComponent
+                                    key={item.id}
+                                    item={item}
+                                    onUpdateQuantity={updateItemQuantity}
+                                    onRemove={removeItemFromCart}
+                                />
+                            ))
+                        ) : (
+                            <p className="text-gray-400">Your cart is empty</p>
+                        )}
+                    </AnimatePresence>
                 </div>
-                <div className="lg:col-span-1 lg:sticky lg:top-28">
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <h2 className="text-lg font-semibold mb-4">Discount Code</h2>
-                        <input
-                            type="text"
-                            className="w-full p-2 border border-gray-300 rounded mb-4"
-                            value={discountCode}
-                            onChange={(e) => setDiscountCode(e.target.value)}
-                        />
-                        <button
-                            className="w-full bg-blue-500 text-white py-2 rounded mb-4"
-                            onClick={() => applyDiscountCode(discountCode)}
-                        >
-                            Apply
-                        </button>
-                        <div className="flex justify-between text-gray-700 mb-2">
-                            <span>Total Price</span>
-                            <span>${calculateTotalPrice()}</span>
-                        </div>
-                        <div className="flex justify-between text-gray-700 mb-2">
-                            <span>Discount</span>
-                            <span>${discount}</span>
-                        </div>
-                        <div className="flex justify-between text-lg font-semibold">
-                            <span>Final Price</span>
-                            <span>${finalPrice}</span>
-                        </div>
-                        <button
-                            className="w-full bg-green-500 text-white py-2 rounded mt-4"
-                            onClick={handleCheckout}
-                        >
-                            Checkout
-                        </button>
-                    </div>
-                </div>
+                <DiscountSection
+                    discountCode={discountCode}
+                    setDiscountCode={setDiscountCode}
+                    applyDiscountCode={applyDiscountCode}
+                    finalPrice={finalPrice}
+                    initialPrice={initialPrice}
+                    discountAmount={discountAmount}
+                    handleCheckout={handleCheckout}
+                />
             </div>
         </div>
     );
 };
 
-export default Cart;
+export default CartPage;
